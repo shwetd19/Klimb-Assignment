@@ -8,7 +8,7 @@ exports.uploadCandidates = async (req, res) => {
     }
 
     const excelData = excelToJson({
-      source: req.file.buffer, // Use req.file.buffer instead of req.file.path
+      source: req.file.buffer,
       header: { rows: 1 },
       columnToKey: {
         A: "name",
@@ -24,7 +24,7 @@ exports.uploadCandidates = async (req, res) => {
       },
     });
 
-    const candidates = excelData["Sheet1"]; // Assuming Sheet1 is the name of the sheet in Excel
+    const candidates = excelData["Sheet1"];
 
     await Candidate.insertMany(candidates);
 
@@ -34,6 +34,16 @@ exports.uploadCandidates = async (req, res) => {
     });
   } catch (error) {
     console.error("Error uploading candidates:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+};
+
+exports.getAllCandidates = async (req, res) => {
+  try {
+    const candidates = await Candidate.find();
+    res.status(200).json({ candidates });
+  } catch (error) {
+    console.error("Error fetching candidates:", error);
     res.status(500).json({ error: "Internal server error" });
   }
 };
