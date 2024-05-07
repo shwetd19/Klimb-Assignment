@@ -8,7 +8,7 @@ exports.uploadCandidates = async (req, res) => {
     }
 
     const excelData = excelToJson({
-      sourceFile: req.file.buffer,
+      source: req.file.buffer, // Use req.file.buffer instead of req.file.path
       header: { rows: 1 },
       columnToKey: {
         A: "name",
@@ -24,13 +24,13 @@ exports.uploadCandidates = async (req, res) => {
       },
     });
 
-    const candidates = excelData.Candidates;
+    const candidates = excelData["Sheet1"]; // Assuming Sheet1 is the name of the sheet in Excel
 
-    const insertedCandidates = await Candidate.insertMany(candidates);
+    await Candidate.insertMany(candidates);
 
     res.status(201).json({
       message: "Candidates uploaded successfully",
-      candidates: insertedCandidates,
+      candidates: candidates,
     });
   } catch (error) {
     console.error("Error uploading candidates:", error);
