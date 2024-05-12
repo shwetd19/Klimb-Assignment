@@ -12,43 +12,60 @@ exports.uploadCandidates = async (req, res) => {
     await workbook.xlsx.load(req.file.buffer);
     const worksheet = workbook.getWorksheet(1);
 
-    const uniqueEmails = new Set(); 
     const candidates = [];
-
-    async.eachSeries(worksheet._rows.slice(1), async (row) => {
-      const candidate = {
-        name: row.getCell(1).value,
-        email: row.getCell(2).value,
-        mobileNo: row.getCell(3).value,
-        dob: row.getCell(4).value,
-        workExperience: row.getCell(5).value,
-        resumeTitle: row.getCell(6).value,
-        currentLocation: row.getCell(7).value,
-        postalAddress: row.getCell(8).value,
-        currentEmployer: row.getCell(9).value,
-        currentDesignation: row.getCell(10).value,
-      };
-
-      if (!uniqueEmails.has(candidate.email)) {
-        uniqueEmails.add(candidate.email);
-        candidates.push(candidate);
-      } else {
-        console.error("Skipping candidate with duplicate email:", candidate);
+    worksheet.eachRow((row, rowNumber) => {
+      if (rowNumber !== 1) {
+        candidates.push({
+          name: row.getCell(1).value,
+          email: row.getCell(2).value,
+          mobileNo: row.getCell(3).value,
+          dob: row.getCell(4).value,
+          workExperience: row.getCell(5).value,
+          resumeTitle: row.getCell(6).value,
+          currentLocation: row.getCell(7).value,
+          postalAddress: row.getCell(8).value,
+          currentEmployer: row.getCell(9).value,
+          currentDesignation: row.getCell(10).value,
+        });
       }
     });
 
-    await Candidate.insertMany(candidates);
-
-    res.status(201).json({
-      message: "Candidates uploaded successfully",
-      candidates: candidates,
-    });
+    async.eachSeries(
+      candidates,
+      async (candidate) => {
+        try {
+          const existingCandidate = await Candidate.findOne({
+            email: candidate.email,
+          });
+          if (!existingCandidate) {
+            await Candidate.create(candidate);
+          } else {
+            console.error(
+              "Skipping candidate with duplicate email:",
+              candidate
+            );
+          }
+        } catch (error) {
+          console.error("Error uploading candidate:", error);
+          throw error;
+        }
+      },
+      (err) => {
+        if (err) {
+          console.error("Error processing candidates:", err);
+          return res.status(500).json({ error: "Internal server error" });
+        }
+        res.status(201).json({
+          message: "Candidates uploaded successfully",
+          candidates: candidates,
+        });
+      }
+    );
   } catch (error) {
     console.error("Error uploading candidates:", error);
     res.status(500).json({ error: "Internal server error" });
   }
 };
-
 
 exports.getAllCandidates = async (req, res) => {
   try {

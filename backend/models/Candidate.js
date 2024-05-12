@@ -4,7 +4,7 @@ const candidateSchema = new mongoose.Schema({
   name: String,
   email: String,
   mobileNo: String,
-  dob: Date,
+  dob: String,
   workExperience: String,
   resumeTitle: String,
   currentLocation: String,

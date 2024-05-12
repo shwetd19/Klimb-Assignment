@@ -1,16 +1,14 @@
 const express = require("express");
 const mongoose = require("mongoose");
 const dotenv = require("dotenv");
-const cors = require("cors"); 
+const cors = require("cors");
 const candidateRoutes = require("./routes/candidateRoutes");
 
 dotenv.config();
 
+// Updated MongoDB connection setup without deprecated options
 mongoose
-  .connect(process.env.MONGODB_URI, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
-  })
+  .connect(process.env.MONGODB_URI)
   .then(() => {
     console.log("Connected to MongoDB");
   })
