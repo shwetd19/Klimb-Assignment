@@ -5,7 +5,11 @@ const upload = multer({ storage: multer.memoryStorage() }); // multer to store f
 
 const candidateController = require("../controllers/candidateController");
 
-router.post("/upload", upload.single("file"), candidateController.uploadCandidates);
+router.post(
+  "/upload",
+  upload.single("file"),
+  candidateController.uploadCandidates
+);
 
 router.get("/return", candidateController.getAllCandidates);
 

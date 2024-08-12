@@ -1,6 +1,6 @@
 const Candidate = require("../models/Candidate");
-const excel = require("exceljs");
 const async = require("async");
+const excel = require("exceljs");
 
 exports.uploadCandidates = async (req, res) => {
   try {

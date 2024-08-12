@@ -5,12 +5,12 @@ const candidateSchema = new mongoose.Schema({
   email: String,
   mobileNo: String,
   dob: String,
-  workExperience: String,
   resumeTitle: String,
   currentLocation: String,
   postalAddress: String,
   currentEmployer: String,
   currentDesignation: String,
+  workExperience: String,
 });
 
 const Candidate = mongoose.model("Candidate", candidateSchema);
