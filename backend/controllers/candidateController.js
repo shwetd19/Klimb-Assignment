@@ -72,7 +72,7 @@ exports.getAllCandidates = async (req, res) => {
     const candidates = await Candidate.find();
     res.status(200).json(candidates);
   } catch (error) {
-    console.error("Error fetching candidates:", error);
-    res.status(500).json({ error: "Internal server error" });
+    console.error("Error fetching some candidates:", error);
+    res.status(500).json({ error: "Internal Server Error" });
   }
 };
