@@ -1,5 +1,4 @@
 const Candidate = require("../models/Candidate");
-const async = require("async");
 const excel = require("exceljs");
 
 exports.uploadCandidates = async (req, res) => {
@@ -13,7 +12,7 @@ exports.uploadCandidates = async (req, res) => {
     const worksheet = workbook.getWorksheet(1);
 
     const candidates = [];
-    worksheet.eachRow((row, rowNumber) => {
+    worksheet.eachRow({ includeEmpty: true }, (row, rowNumber) => {
       if (rowNumber !== 1) {
         candidates.push({
           name: row.getCell(1).value,
@@ -30,37 +29,36 @@ exports.uploadCandidates = async (req, res) => {
       }
     });
 
-    async.eachSeries(
-      candidates,
-      async (candidate) => {
+    const results = await Promise.all(
+      candidates.map(async (candidate) => {
         try {
-          const existingCandidate = await Candidate.findOne({
-            email: candidate.email,
-          });
+          const existingCandidate = await Candidate.findOne({ email: candidate.email });
           if (!existingCandidate) {
             await Candidate.create(candidate);
+            return { success: true, candidate };
           } else {
-            console.error(
-              "Skipping candidate with duplicate email:",
-              candidate
-            );
+            console.warn("Skipping candidate with duplicate email:", candidate.email);
+            return { success: false, candidate };
           }
         } catch (error) {
           console.error("Error uploading candidate:", error);
-          throw error;
+          return { success: false, candidate, error };
         }
-      },
-      (err) => {
-        if (err) {
-          console.error("Error processing candidates:", err);
-          return res.status(500).json({ error: "Internal server error" });
-        }
-        res.status(201).json({
-          message: "Candidates uploaded successfully",
-          candidates: candidates,
-        });
-      }
+      })
     );
+
+    const successfulUploads = results.filter(result => result.success);
+    const failedUploads = results.filter(result => !result.success);
+
+    res.status(201).json({
+      message: "Candidates processed successfully",
+      successfulUploads: successfulUploads.length,
+      failedUploads: failedUploads.length,
+      details: failedUploads.map(result => ({
+        candidate: result.candidate,
+        error: result.error?.message || "Unknown error"
+      }))
+    });
   } catch (error) {
     console.error("Error uploading candidates:", error);
     res.status(500).json({ error: "Internal server error" });
